@@ -1,0 +1,303 @@
+[project]
+name = "iceos"
+version = "0.5.0-beta"
+
+[tool.poetry]
+name = "iceos"
+version = "0.5.0-beta"
+description = "iceOS – Intelligent Composable Environment platform"
+license = "MIT"
+authors = ["iceOS contributors <opensource@iceos.dev>"]
+readme = "README.md"
+
+# Tell Poetry we use src/ layout and enumerate the top-level packages.
+packages = [
+  { include = "ice_sdk", from = "src" },
+  { include = "ice_orchestrator", from = "src" },
+  { include = "ice_cli", from = "src" },
+  { include = "ice_api", from = "src" },
+  { include = "ice_core", from = "src" }
+]
+
+# Include non-Python assets (JSON templates & default context store)
+include = [
+  "src/ice_api/templates/*.json",
+  "src/ice_api/data/*.json"
+]
+
+# Ensure demo/sample code isn't shipped in the production wheel. Only the
+# packages explicitly listed under *packages* are included, but this makes the
+# intent crystal-clear.
+exclude = ["examples", "tests", "scripts"]
+
+# ---------------------------------------------------------------------------
+# NOTE: Configuration files have been organized into config/ directory:
+# - config/linting/ruff.toml - Ruff linter configuration
+# - config/typing/mypy.ini - MyPy type checking configuration  
+# - config/testing/pytest.ini - Pytest configuration
+# Use: ruff check --config config/linting/ruff.toml
+#      mypy --config-file config/typing/mypy.ini
+#      pytest -c config/testing/pytest.ini
+# ---------------------------------------------------------------------------
+
+[tool.poetry.plugins."proto"]
+"orchestrator/v1alpha/network.proto" = "ice_sdk.protocols.mcp.models:NetworkSpec"
+
+[build-system]
+requires = [
+  "poetry-core>=1.0.0",
+  "setuptools>=68",
+  "pip>=23",
+  "betterproto[compiler]",
+]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+asyncio_mode = "auto"
+testpaths = ["tests_smoke"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = """
+    --verbose
+    --tb=short
+    --strict-markers
+    --cov=ice_sdk
+    --cov=ice_orchestrator
+    --cov=ice_api
+    --cov-report=html
+    --cov-report=term-missing
+    --cov-fail-under=0
+    --cov-branch
+    --junitxml=tests/output/test-results.xml
+    --html=tests/output/test-report.html
+    --self-contained-html
+"""
+markers = [
+    "slow: slow-running tests (contract/property)",
+    "contract: contract tests against external services or containers",
+    "property: property-based tests via Hypothesis",
+    "integration: live integration tests requiring API keys",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+# Existing dependencies
+[tool.poetry.dependencies]
+python = "^3.10"
+redis = "^4.6.0"  # Async Redis client for blueprint & event persistence
+aiohttp = ">=3.9.3"  # Async HTTP client
+numpy = "^1.26"  # Pin to ABI-compatible line; NumPy 2.x breaks torch wheels
+alembic = "^1.12.1"
+anthropic = "0.19.0"
+# Patched versions resolving CVE-2024-24762 (FastAPI) and CVE-2024-24762 (python-multipart)
+fastapi = ">=0.109.1,<0.200"
+google-generativeai = "0.4.0"
+httpx = "<0.25.0,>=0.24.0"
+# Optional deps for new tools -----------------------------
+jmespath = "^1.0.1"
+pypdf = "^3.17.0"
+networkx = "^3.1"
+openai = "1.14.1"
+opentelemetry-api = "^1.23.0"
+opentelemetry-sdk = "^1.23.0"
+jsonschema = "^4.22.0"
+PyYAML = "^6.0"
+packaging = "^23.2"
+pydantic = "^2.7.0"
+python-dotenv = "^1.0.0"
+# Heavy ML deps (optional)
+sentence-transformers = {version = "^2.6.0", optional = true}
+torch = {version = "^2.3.0", optional = true}
+scikit-learn = {version = "^1.5.0", optional = true}
+# Ensure build tooling is on a safe version (PYSEC-2025-49)
+setuptools = ">=78.1.1"
+# Ensure build tooling is on a safe version (PYSEC-2025-49)
+sqlalchemy = "^2.0.23"
+structlog = "^24.1.0"
+annoy = "^1.17.3"
+cryptography = "^44.0.1"
+typer = "^0.12.1"
+watchdog = "^4.0.0"
+tenacity = "^8.2.3"
+tiktoken = "^0.5.1"
+uvicorn = "^0.24.0"
+# WASM sandbox execution
+wasmtime = "^24.0.0"
+# Ensure build tooling is on a safe version (PYSEC-2025-49)
+python-multipart = "^0.0.18"
+rich = "^13.6.0"
+jinja2 = "^3.1.3"
+sse-starlette = {version = "^1.6.1", optional = true}
+
+# Nested dict traversal for validation helpers -----------------------------
+dpath = "^2.1.0"
+pandas = "^2.3.1"
+
+[tool.poetry.group.dev.dependencies]
+coverage = "^7.2.0"
+pytest = "^7.0.0"
+pytest-asyncio = "^0.21.0"
+pytest-benchmark = "^4.0.0"
+pytest-cov = "^4.1.0"
+pytest-html = "^4.1.1"
+pytest-metadata = "^3.0.0"
+pytest-mock = "^3.12.0"
+pytest-randomly = "^3.15.0"
+pytest-timeout = "^2.2.0"
+# AST codemod dependency ----------------------------------
+libcst = "^1.1.0"
+pytest-xdist = "^3.3.1"
+# Upgrade black to patched release (PYSEC-2024-48)
+black = "^24.4.0"
+flake8 = "^6.1.0"
+isort = "^5.12.0"
+mypy = "^1.5.0"
+# Tooling ----------------------------------------
+ruff = "^0.1.7"
+pip-audit = "^2.7.2"
+types-PyYAML = "^6.0.12.20250516"
+pyright = "^1.1.402"
+import-linter = "^2.3.0"
+hypothesis = "^6.100"
+mutmut = "^2.5"
+testcontainers = "^4.5"
+respx = "^0.21.0"
+questionary = "^2.0.1"
+mkdocs = "^1.5.3"
+mkdocs-material = "^9.5.9"
+mkdocstrings = "^0.24.0"
+mkdocstrings-python = "^1.7.0"
+mkdocs-include-markdown-plugin = "^6.0.4"
+mkdocs-autorefs = "^1.0.1"
+griffe = "<1.0"
+pre-commit = "4.2.0"
+pip = ">=23.3"
+setuptools = ">=78.1.1"
+sqlalchemy = "^2.0.23"
+
+[tool.poetry.scripts]
+ice = "ice_cli.cli:app"
+
+[tool.poetry.extras]
+llm_openai = ["openai", "tiktoken"]
+llm_anthropic = ["anthropic"]
+llm_gemini = ["google-generativeai"]
+
+# Optional heavy ML stack for vector memory & embeddings
+embeddings = [
+  "sentence-transformers",
+  "torch",
+  "scikit-learn"
+]
+
+# Alias for test & lint dependencies when installing via `pip` instead of Poetry
+dev = [
+  "coverage",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-benchmark",
+  "pytest-cov",
+  "pytest-html",
+  "pytest-metadata",
+  "pytest-mock",
+  "pytest-randomly",
+  "pytest-timeout",
+  "pytest-xdist",
+  "black",
+  "flake8",
+  "isort",
+  "mypy",
+  "ruff",
+  "types-PyYAML",
+  "pyright",
+  "import-linter",
+  "hypothesis",
+  "mutmut",
+  "testcontainers",
+  "respx",
+  "questionary",
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocstrings",
+  "mkdocstrings-python",
+  "mkdocs-include-markdown-plugin",
+  "mkdocs-autorefs",
+  "griffe",
+  "pre-commit",
+  "pip-audit",
+]
+
+# ---------------------------------------------------------------------------
+# Static typing configuration (pyright) -------------------------------------
+# ---------------------------------------------------------------------------
+
+[tool.pyright]
+# Only enforce strict typing on new app & CLI code until older packages are modernised.
+# Packages listed in *exclude* are still type-checked in *basic* mode when imported
+# elsewhere, but errors are silenced for their own source files.
+typeCheckingMode = "basic"
+exclude = [
+  "src/ice_sdk",
+  "src/ice_orchestrator",
+]
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+
+# ---------------------------------------------------------------------------
+# Ruff – Python linter configuration ---------------------------------------
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 88
+# Target the same Python version used elsewhere
+target-version = "py310"
+
+# Suppress import-after-top-level rule across the repo until legacy modules are cleaned up.
+[tool.ruff.lint]
+ignore = ["E402"]
+
+# Exclude auto-generated/compiled artefacts
+exclude = [
+  "site",
+  "htmlcov",
+  "tests",
+  "scripts",
+]
+
+# Per-file ignores – allow more relaxed style in tests & helper scripts
+[tool.ruff.per-file-ignores]
+"tests/**/*" = ["E402", "F401", "F841"]  # noqa: imports-after-code & unused vars in tests
+"scripts/**/*" = ["E402"]  # noqa: imports-after-code in top-level scripts
+
+[project.entry-points."ice_sdk.tools"]
+csv_reader = "ice_sdk.tools.system.csv_reader_tool:CSVReaderTool"
+jinja_render = "ice_sdk.tools.system.jinja_render_tool:JinjaRenderTool"
+summarizer = "ice_sdk.tools.system.summarizer_tool:SummarizerTool"
+insights = "ice_sdk.tools.system.insights_tool:InsightsTool"
+json_merge = "ice_sdk.tools.system.json_merge_tool:JSONMergeTool"
+markdown_to_html = "ice_sdk.tools.system.markdown_to_html_tool:MarkdownToHTMLTool"
+rows_validator = "ice_sdk.tools.system.rows_validator_tool:RowsValidatorTool"
+line_item_generator = "ice_sdk.tools.system.line_item_generator_tool:LineItemGeneratorTool"
+sleep = "ice_sdk.tools.system.sleep_tool:SleepTool"
+computer = "ice_sdk.tools.system.computer_tool:ComputerTool"
+csv_writer = "ice_sdk.tools.system.csv_writer_tool:CSVWriterTool"
+
+[project.entry-points."ice_sdk.agents"]
+# third-party packages register: foo_agent = "mypkg.foo:MyAgent"
+budget_advisor = "ice_sdk.agents.budget_advisor_agent:BudgetAdvisorAgent"
+
+[project.entry-points."ice_sdk.units"]
+summarise_then_render = "ice_sdk.units.summarise_then_render_unit:SummariseThenRenderUnit"
+
+[project.entry-points."ice_sdk.chains"]
+inventory_summary = "ice_sdk.chains.inventory_summary_chain:InventorySummaryChain"
